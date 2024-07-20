@@ -1,0 +1,35 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap");
+
+:root {
+    --background: #fff;
+    --text: #414856;
+    --primary-color: #4f29f0;
+    --disabled: #c3c8de;
+    --border-radius: 10px;
+    --theme-bg-color: rgba(16 18 27 / 40%);
+        --theme-color: #f9fafb;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    background-image:
+        radial-gradient(rgba(255, 0, 0, 0.8), rgba(255,0,0, 0) 40vw),
+        radial-gradient(rgba(0,128,0, 0.8), rgba(0,128,0, 0) 40vw),
+        radial-gradient(rgba(0,0,255, 0.8), rgba(0,0,225, 0) 40vw),
+        radial-gradient(rgba(255,255,0, 0.8), rgba(255,255,0, 0) 40vw),
+        radial-gradient(rgba(255,0,0, 0.8), rgba(255,0,0, 0) 40vw);
+    background-position:
+        -40vw 14rem,
+        50% 10rem,
+        60vw 14rem,
+        -10vw calc(14rem + 20vw),
+        30vw calc(14rem + 20vw);
+    background-size: 80vw 80vw;
+    background-repeat: no-repeat;
+}
