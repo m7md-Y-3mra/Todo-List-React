@@ -1,31 +1,37 @@
 import { useState } from "react";
 import "./Popup.css";
 import { Close } from "@mui/icons-material";
-export default function Popup({ setEdittingTodo, handleOkClick }) {
-  const [newTodoLable, setNewTodoLable] = useState("");
+export default function Popup({
+  handleCloseClick,
+  header,
+  className,
+  children,
+}) {
+  console.log(className);
   return (
-    <div className="popup">
+    <div className={`popup ${className}`}>
       <div className="header">
-        <h3>Edit the todo</h3>
-        <Close onClick={(e) => setEdittingTodo(null)} />
+        <h3>{header}</h3>
+        <Close onClick={handleCloseClick} />
       </div>
-      <div className="body">
+      {children}
+      {/* <div className="body">
         <input
-          onChange={(e) => setNewTodoLable(e.target.value)}
+          onChange={(e) => {
+            setNewTodoLabel(e.target.value);
+            setIsEmptyInput(false);
+          }}
           placeholder="Edit the todo ..."
+          value={newTodoLabel}
+          className={isEmptyInput ? "error" : ""}
         />
         <div className="popup-btns">
-          <button
-            onClick={(e) => {
-              handleOkClick(newTodoLable);
-              setEdittingTodo(null);
-            }}
-          >
+          <button onClick={(e) => setIsEmptyInput(handleOkClick(newTodoLabel))}>
             OK
           </button>
-          <button onClick={(e) => setEdittingTodo(null)}>Close</button>
+          <button onClick={handleCloseClick}>Close</button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

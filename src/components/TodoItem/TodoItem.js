@@ -8,14 +8,18 @@ export default function TodoItem({
   handleTodoClick,
 }) {
   return (
-    <div className="todo-item">
-      <div className="todo-item_check">
-        <input type="checkbox" id={myTodo.id} checked={myTodo.completed} />
+    <div className="todo-item-container">
+      <div className="todo-item">
+        <input
+          type="checkbox"
+          id={myTodo.id}
+          defaultChecked={myTodo.completed}
+        />
         <label htmlFor={myTodo.id} onClick={(e) => handleTodoClick(myTodo.id)}>
           <span>{myTodo.todoLabel}</span>
         </label>
       </div>
-      <div className="btns">
+      <div className="todo-actions">
         <button onClick={(e) => handleDeleteClick(myTodo.id)}>
           {<Delete />}
         </button>
