@@ -1,29 +1,22 @@
-import { useState } from "react";
 import "./TodoItem.css";
 import { Delete, Edit } from "@mui/icons-material";
 export default function TodoItem({
-  myTodo,
-  handleDeleteClick,
-  setEdittingTodo,
-  handleTodoClick,
+  todo,
+  onDelete,
+  onEdit,
+  onToggleCompletion,
 }) {
   return (
     <div className="todo-item-container">
       <div className="todo-item">
-        <input
-          type="checkbox"
-          id={myTodo.id}
-          defaultChecked={myTodo.completed}
-        />
-        <label htmlFor={myTodo.id} onClick={(e) => handleTodoClick(myTodo.id)}>
-          <span>{myTodo.todoLabel}</span>
+        <input type="checkbox" id={todo.id} defaultChecked={todo.completed} />
+        <label htmlFor={todo.id} onClick={(e) => onToggleCompletion(todo.id)}>
+          <span>{todo.label}</span>
         </label>
       </div>
       <div className="todo-actions">
-        <button onClick={(e) => handleDeleteClick(myTodo.id)}>
-          {<Delete />}
-        </button>
-        <button onClick={(e) => setEdittingTodo(myTodo)}>{<Edit />}</button>
+        <button onClick={(e) => onDelete(todo.id)}>{<Delete />}</button>
+        <button onClick={(e) => onEdit(todo)}>{<Edit />}</button>
       </div>
     </div>
   );

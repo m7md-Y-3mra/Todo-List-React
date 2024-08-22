@@ -308,6 +308,7 @@
   font-weight: 500;
   letter-spacing: 0.5px;
   border: 1px solid transparent;
+  padding: 2px 5px;
 }
 @media only screen and (max-width: 425px) {
   .app-container .todo-list-section .todo-list-footer button {

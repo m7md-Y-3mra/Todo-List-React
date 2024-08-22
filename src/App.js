@@ -1,119 +1,136 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import TodoItem from "./components/TodoItem/TodoItem";
 import Popup from "./components/Popup/Popup";
 import "./App.css";
 import ToggleButton from "./components/ToggleButton/ToggleButton";
-import FeaturesPopup from "./components/FeaturesPopup/FeaturesPopup";
 
-const oldTodoes = localStorage.getItem("todoes");
-const theme = localStorage.getItem("theme");
-const newUser = localStorage.getItem("newUser");
 let nextId = JSON.parse(localStorage.getItem("nextId")) || 0;
+const getFromLocalStorage = (key) => JSON.parse(localStorage.getItem(key));
+const setToLocalStorage = (key, value) =>
+  localStorage.setItem(key, JSON.stringify(value));
 function App() {
-  const [todoes, setTodoes] = useState(JSON.parse(oldTodoes) || []);
+  const [todos, setTodos] = useState(getFromLocalStorage("todos") || []);
   const [status, setStatus] = useState("all");
   const [todoLabel, setTodoLabel] = useState("");
   const [edittingTodo, setEdittingTodo] = useState(null);
-  const [darkMode, setDarkMode] = useState(JSON.parse(theme) || false);
+  const [isDarkMode, setIsDarkMode] = useState(
+    getFromLocalStorage("theme") || false
+  );
   const [isEmptyInput, setIsEmptyInput] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(JSON.parse(newUser) ?? true);
-  // for input
-  const [newTodoLabel, setNewTodoLabel] = useState("");
-  const [isEmptyEditInput, setIsEmptyEditInput] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(
+    getFromLocalStorage("newUser") ?? true
+  );
+  // for edit popup input
+  const [editedTodoText, setEditedTodoText] = useState("");
+  const [isEditInputEmpty, setIsEditInputEmpty] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem("todoes", JSON.stringify(todoes));
-  }, [todoes]);
+    setToLocalStorage("todos", todos);
+  }, [todos]);
 
   useEffect(() => {
-    localStorage.setItem("theme", JSON.stringify(darkMode));
-  }, [darkMode]);
+    setToLocalStorage("theme", isDarkMode);
+  }, [isDarkMode]);
 
-  const completedTodoes = todoes.filter((todo) => todo.completed);
-  const notCompletedTodoes = todoes.filter((todo) => !todo.completed);
-  const AllTodoes = [...todoes];
+  const completedTodos = todos.filter((todo) => todo.completed);
+  const notCompletedTodos = todos.filter((todo) => !todo.completed);
 
-  function handleAddClick() {
-    if (todoLabel) {
-      setTodoes([
-        ...todoes,
-        { id: nextId++, todoLabel: todoLabel, completed: false },
-      ]);
+  const filterTodosByStatus = useCallback(() => {
+    switch (status) {
+      case "completed":
+        return todos.filter((todo) => todo.completed);
+      case "notCompleted":
+        return todos.filter((todo) => !todo.completed);
+      default:
+        return todos;
+    }
+  }, [status, todos]);
+
+  const handleAddTodo = useCallback(() => {
+    if (todoLabel.trim() !== "") {
+      const newTodo = {
+        id: nextId++,
+        label: todoLabel.trim(),
+        completed: false,
+      };
+      setTodos((prevTodos) => [...prevTodos, newTodo]);
       setIsEmptyInput(false);
       setTodoLabel("");
-      localStorage.setItem("nextId", JSON.stringify(nextId));
+      setToLocalStorage("nextId", nextId);
       return;
     }
     setIsEmptyInput(true);
-  }
+  }, [todoLabel]);
 
-  function handleDeleteClick(id) {
-    const newTodoes = todoes.filter((todo) => todo.id !== id);
-    setTodoes(newTodoes);
-  }
+  const handleDeleteTodo = useCallback(
+    (todoId) => {
+      const updatedTodos = todos.filter((todo) => todo.id !== todoId);
+      setTodos(updatedTodos);
+    },
+    [todos]
+  );
 
-  function handleEditClick(updatedTodo) {
-    const newTodoes = todoes.map((todo) => {
-      if (todo.id === edittingTodo.id) {
-        todo.todoLabel = updatedTodo;
-      }
-      return todo;
-    });
-    setTodoes(newTodoes);
-  }
+  const handleUpdateTodo = useCallback(
+    (updatedLabel) => {
+      const updatedTodos = todos.map((todo) =>
+        todo.id === edittingTodo.id ? { ...todo, label: updatedLabel } : todo
+      );
+      setTodos(updatedTodos);
+    },
+    [todos, edittingTodo]
+  );
 
   function handleCloseClick() {
     setEdittingTodo(null);
   }
 
-  function handleOkClick(updatedTodo) {
-    if (updatedTodo === "") {
+  function handleOkClick(updatedLabel) {
+    if (updatedLabel.trim() === "") {
       return true;
     }
-    handleEditClick(updatedTodo);
+    handleUpdateTodo(updatedLabel);
     setEdittingTodo(null);
     return false;
   }
 
-  function handleTodoClick(id) {
-    setTodoes(
-      (prevTodos) =>
-        prevTodos.map((todo) =>
-          todo.id === id ? { ...todo, completed: !todo.completed } : todo
-        )
-      // .sort((a, b) => a.completed - b.completed)
+  const handleToggleTodoCompletion = useCallback((id) => {
+    setTodos((previousTodos) =>
+      previousTodos.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
     );
-  }
-
-  function handleChangeInput(e) {
-    setTodoLabel(e.target.value);
-    setIsEmptyInput(false);
-  }
+  }, []);
 
   function handleClearCompletedClick() {
-    setTodoes(notCompletedTodoes);
+    setTodos(notCompletedTodos);
   }
 
   function handleCloseEditClick() {
     setIsNewUser(false);
-    localStorage.setItem("newUser", false);
+    setToLocalStorage("newUser", false);
   }
 
-  function renderTodoes(specficTodoes) {
-    return specficTodoes.map((todo) => {
-      return (
-        <TodoItem
-          key={todo.id}
-          myTodo={todo}
-          setEdittingTodo={setEdittingTodo}
-          handleDeleteClick={handleDeleteClick}
-          handleTodoClick={handleTodoClick}
-        />
-      );
-    });
-  }
+  const renderTodosList = useCallback(
+    () =>
+      todos &&
+      filterTodosByStatus().map((todo) => {
+        return (
+          <TodoItem
+            key={todo.id}
+            todo={todo}
+            onEdit={(e) => {
+              setEdittingTodo(todo);
+              setEditedTodoText(todo.label);
+            }}
+            onDelete={handleDeleteTodo}
+            onToggleCompletion={handleToggleTodoCompletion}
+          />
+        );
+      }),
+    [handleDeleteTodo, handleToggleTodoCompletion, filterTodosByStatus, todos]
+  );
   return (
-    <div className={`app ${darkMode ? `dark-mode` : ``}`}>
+    <div className={`app ${isDarkMode ? `dark-mode` : ``}`}>
       <div className="background">
         <div className="circle-top"></div>
         <div className="circle-middle"></div>
@@ -125,63 +142,46 @@ function App() {
         <div className="header-section">
           <div className="header-content">
             <h1 className="header-title">Todo List</h1>
-            <ToggleButton setDarkMode={setDarkMode} darkMode={darkMode} />
+            <ToggleButton setDarkMode={setIsDarkMode} darkMode={isDarkMode} />
           </div>
           <div className="header-form">
             <input
               type="text"
               placeholder="what to do?"
               value={todoLabel}
-              onChange={handleChangeInput}
-              onKeyDown={(e) => e.key === "Enter" && handleAddClick(e)}
+              onChange={(e) => {
+                setTodoLabel(e.target.value);
+                setIsEmptyInput(false);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && handleAddTodo()}
               className={isEmptyInput ? "error" : ""}
-
-              // pattern="[A-Za-z0-9]{1,20}"
-              // required
             />
-            <button onClick={handleAddClick}>Add</button>
+            <button onClick={handleAddTodo}>Add</button>
           </div>
         </div>
         <div className="todo-list-section">
           <div className="filter-buttons">
-            <button
-              className={status === "all" ? "active" : ""}
-              onClick={(e) => setStatus("all")}
-            >
-              All
-            </button>
-            <button
-              className={status === "completed" ? "active" : null}
-              onClick={(e) => setStatus("completed")}
-            >
-              Completed
-            </button>
-            <button
-              className={status === "notCompleted" ? "active" : null}
-              onClick={(e) => setStatus("notCompleted")}
-            >
-              Not Completed
-            </button>
+            {["all", "completed", "notCompleted"].map((filterStatus) => (
+              <button
+                key={filterStatus}
+                className={status === filterStatus ? "active" : ""}
+                onClick={() => setStatus(filterStatus)}
+              >
+                {filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}
+              </button>
+            ))}
           </div>
-          {todoes.length !== 0 ? (
-            <div className="todo-list ">
-              {renderTodoes(
-                status === "completed"
-                  ? completedTodoes
-                  : status === "notCompleted"
-                  ? notCompletedTodoes
-                  : AllTodoes
-              )}
-            </div>
+          {todos.length > 0 ? (
+            <div className="todo-list ">{renderTodosList()}</div>
           ) : (
-            <div className="empty-todo-list">Don't have any todoes</div>
+            <div className="empty-todo-list"> No todos</div>
           )}
           <div className="todo-list-footer">
             <span>
-              <span>{todoes.length}</span> todoes
+              <span>{todos.length}</span> todos
             </span>
             <span>
-              <span>{completedTodoes.length}</span> completed
+              <span>{completedTodos.length}</span> completed
             </span>
             <button onClick={handleClearCompletedClick}>clear completed</button>
           </div>
@@ -191,24 +191,28 @@ function App() {
       <div className={edittingTodo ? "popup-container" : ""}>
         {edittingTodo && (
           <Popup
-            handleCloseClick={handleCloseClick}
+            onClose={handleCloseClick}
             header="Edit todo"
             className="edit-popup"
           >
             <div className="body">
               <input
                 onChange={(e) => {
-                  setNewTodoLabel(e.target.value);
-                  setIsEmptyEditInput(false);
+                  setEditedTodoText(e.target.value);
+                  setIsEditInputEmpty(false);
                 }}
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  setIsEditInputEmpty(handleOkClick(editedTodoText))
+                }
                 placeholder="Edit the todo ..."
-                value={newTodoLabel}
-                className={isEmptyEditInput ? "error" : ""}
+                value={editedTodoText}
+                className={isEditInputEmpty ? "error" : ""}
               />
               <div className="popup-btns">
                 <button
                   onClick={(e) =>
-                    setIsEmptyEditInput(handleOkClick(newTodoLabel))
+                    setIsEditInputEmpty(handleOkClick(editedTodoText))
                   }
                 >
                   OK
@@ -223,7 +227,7 @@ function App() {
       <div className={isNewUser ? "popup-container" : ""}>
         {isNewUser && (
           <Popup
-            handleCloseClick={handleCloseEditClick}
+            onClose={handleCloseEditClick}
             header="App Features"
             className="features-popup"
           >
@@ -232,6 +236,11 @@ function App() {
                 <li data-num="1">Add tasks</li>
                 <li data-num="2">Delete tasks</li>
                 <li data-num="3">Edit tasks</li>
+                <li data-num="4">Mark tasks as completed</li>
+                <li data-num="5">Filter tasks</li>
+                <li data-num="6">Dark/Light Mode</li>
+                <li data-num="7">Persistent Data</li>
+                <li data-num="8">Clear Completed Tasks</li>
               </ul>
               <div className="popup-btns">
                 <button onClick={handleCloseEditClick}>Close</button>
